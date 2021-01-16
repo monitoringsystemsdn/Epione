@@ -1,0 +1,61 @@
+version: "3"
+
+services:
+   influxdb:
+      image: hypriot/rpi-influxdb
+      ports: 
+         - "8086:8086"
+      container_name: influxdb
+      restart: always
+      environment:
+         - INFLUXDB_INIT_PWD= "admin"
+         - PRE_CREATE_DB= patientdata
+      volumes:
+         - ./data_store:/var/lib/influxdb
+      networks:
+         dial:
+            ipv4_address: 172.18.0.2         
+           
+
+   grafana:
+      image: grafana/grafana
+      ports: 
+         - "3000:3000"
+      container_name: grafana
+      restart: always
+      volumes:
+         - grafana-db:/var/lib/grafana
+         - grafana-log:/var/log/grafana
+         - grafana-conf:/etc/grafana
+      environment:
+         - GF_AUTH_DISABLE_LOGIN_FORM=true
+         - GF_AUTH_ANONYMOUS_ENABLED=true
+         - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+         - GF_SECURITY_ALLOW_EMBEDDING=true
+
+      networks:
+          dial:
+             ipv4_address: 172.18.0.3          
+
+      depends_on:
+           - influxdb
+
+
+networks:
+
+     dial:
+
+        ipam:
+
+          config:
+
+             - subnet: 172.18.0.0/16    
+
+
+volumes:
+     grafana-db:
+        driver: local
+     grafana-log:
+        driver: local
+     grafana-conf:
+        driver: local
